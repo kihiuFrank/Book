@@ -9,6 +9,7 @@ public class Book {
     public String publishedDate;
 
     public Book(String id, String title, String subTitle, String[] authors, String publisher, String publishedDate) {
+
         this.id = id;
         this.title = title;
         this.subTitle = subTitle;
