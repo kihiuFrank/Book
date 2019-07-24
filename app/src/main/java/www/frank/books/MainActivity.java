@@ -35,7 +35,7 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         rvBooks.setLayoutManager(booksLayoutManager);
 
         try {
-            URL bookUrl = ApiUtil.buildUrl("cooking");
+            URL bookUrl = ApiUtil.buildUrl("Good Health");
             new BooksQueryTask().execute(bookUrl);
         } catch (Exception e) {
             Log.d("Error", e.getMessage());

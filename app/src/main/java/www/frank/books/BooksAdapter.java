@@ -1,6 +1,7 @@
 package www.frank.books;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -19,7 +20,7 @@ public class  BooksAdapter extends RecyclerView.Adapter<BooksAdapter.BookViewHol
     @Override
     public BookViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
         Context context = viewGroup.getContext();
-        View itemView = LayoutInflater.from(context).inflate(R.layout.book_list_item, viewGroup, false);
+        View itemView = LayoutInflater.from(context).inflate(R.layout.book_list_item, viewGroup,false);
         return new BookViewHolder(itemView);
     }
 
@@ -34,7 +35,7 @@ public class  BooksAdapter extends RecyclerView.Adapter<BooksAdapter.BookViewHol
         return books.size();
     }
 
-    public class BookViewHolder extends RecyclerView.ViewHolder{
+    public class BookViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
         TextView tvTitle;
         TextView tvAuthors;
         TextView tvDate;
@@ -45,22 +46,24 @@ public class  BooksAdapter extends RecyclerView.Adapter<BooksAdapter.BookViewHol
             tvAuthors = itemView.findViewById(R.id.tv_authors);
             tvDate = itemView.findViewById(R.id.tvPublisherDate);
             tvPublisher = itemView.findViewById(R.id.tvPublisher);
+            itemView.setOnClickListener(this);
         }
 
         public void bind (Book book){
             tvTitle.setText(book.title);
-            String authors = "";
-            int i=0;
-            for (String author:book.authors) {
-                authors+=author;
-                i++;
-                if (i<book.authors.length) {
-                    authors+=", ";
-                }
-            }
-            tvAuthors.setText(authors);
+            tvAuthors.setText(book.authors);
             tvPublisher.setText(book.publisher);
             tvDate.setText(book.publishedDate);
+        }
+
+        @Override
+        public void onClick(View view) {
+            int position = getAdapterPosition();
+            Book selectedBook = books.get(position);
+            Intent intent = new Intent(view.getContext(), BookDetail.class);
+            intent.putExtra("Book", selectedBook);
+            view.getContext().startActivity(intent);
+
         }
     }
 }
