@@ -1,23 +1,24 @@
 package www.frank.books;
 
+import android.content.Intent;
 import android.os.AsyncTask;
-import android.support.v4.view.MenuItemCompat;
-import android.support.v7.app.AppCompatActivity;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
+import androidx.core.view.MenuItemCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
-import android.support.v7.widget.SearchView;
 import android.widget.TextView;
-
+import android.widget.Toast;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.zip.Inflater;
 
 public class MainActivity extends AppCompatActivity implements SearchView.OnQueryTextListener{
     private ProgressBar mLoadingProgress;
@@ -30,12 +31,20 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         mLoadingProgress = findViewById(R.id.pb_loading);
         rvBooks = findViewById(R.id.rv_books);
 
-        LinearLayoutManager booksLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        LinearLayoutManager booksLayoutManager = new LinearLayoutManager(this, RecyclerView.VERTICAL, false);
 
         rvBooks.setLayoutManager(booksLayoutManager);
 
+        Intent intent = getIntent();
+        String query = intent.getStringExtra("Query");
+        URL bookUrl;
+
         try {
-            URL bookUrl = ApiUtil.buildUrl("Good Health");
+            if (query == null || query.isEmpty()) {
+                bookUrl = ApiUtil.buildUrl("android");
+            } else {
+                bookUrl = new URL(query);
+            }
             new BooksQueryTask().execute(bookUrl);
         } catch (Exception e) {
             Log.d("Error", e.getMessage());
@@ -49,6 +58,19 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         final SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
         searchView.setOnQueryTextListener(this);
         return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_advanced_search:
+                Intent intent = new Intent(this, SearchActivity.class);
+                startActivity(intent);
+                return true;
+                default:
+                    return super.onOptionsItemSelected(item);
+        }
+
     }
 
     @Override
@@ -85,19 +107,22 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         protected void onPostExecute(String result) {
             TextView tvError = findViewById(R.id.tv_error);
             mLoadingProgress.setVisibility(View.INVISIBLE);
+            String errorMessage = getString(R.string.error_message);
 
             if (result == null) {
                 rvBooks.setVisibility(View.INVISIBLE);
                 tvError.setVisibility(View.VISIBLE);
+                Toast.makeText(getApplicationContext(), errorMessage, Toast.LENGTH_LONG).show();
             } else {
                 rvBooks.setVisibility(View.VISIBLE);
                 tvError.setVisibility(View.INVISIBLE);
-            }
-            ArrayList<Book> books = ApiUtil.getBooksFromJson(result);
-            String resultString = "";
+                ArrayList<Book> books = ApiUtil.getBooksFromJson(result);
+                String resultString = "";
 
-            BooksAdapter adapter = new BooksAdapter(books);
-            rvBooks.setAdapter(adapter);
+                BooksAdapter adapter = new BooksAdapter(books);
+                rvBooks.setAdapter(adapter);
+            }
+
         }
 
         @Override

@@ -23,6 +23,10 @@ public class   ApiUtil {
     public static final String QUERY_PARAMETER_KEY = "q";
     public static  final String KEY = "key";
     public static  final String API_KEY = "AIzaSyAlTSaftoljGWNxBg-dRabQPvqjeNYA49E";
+    public static  final String TITLE = "intitle:";
+    public static  final String AUTHOR = "inauthor:";
+    public static  final String PUBLISHER = "inpublisher:";
+    public static  final String ISBN = "isbn:";
 
 
     public static URL buildUrl (String title){
@@ -34,6 +38,27 @@ public class   ApiUtil {
         try {
             url = new URL(uri.toString());
         }catch (Exception e){
+            e.printStackTrace();
+        }
+        return url;
+    }
+
+    public static URL buildUrl (String title, String author, String publisher, String isbn){
+        URL url = null;
+        StringBuilder stringBuilder = new StringBuilder();
+        if(!title.isEmpty()) stringBuilder.append(TITLE+title+"+");
+        if(!title.isEmpty()) stringBuilder.append(AUTHOR+author+"+");
+        if(!title.isEmpty()) stringBuilder.append(PUBLISHER+publisher+"+");
+        if(!title.isEmpty()) stringBuilder.append(ISBN+isbn+"+");
+        stringBuilder.setLength(stringBuilder.length()-1);
+        String query = stringBuilder.toString();
+        Uri uri = Uri.parse(BASE_API_URL).buildUpon()
+                .appendQueryParameter(QUERY_PARAMETER_KEY, query)
+                .appendQueryParameter(KEY, API_KEY)
+                .build();
+        try {
+            url = new URL(uri.toString());
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return url;
@@ -70,6 +95,8 @@ public class   ApiUtil {
         final String ITEMS = "items";
         final String VOLUMEINFO = "volumeInfo";
         final String DESCRIPTION = "description";
+        final String IMAGELINKS = "imageLinks";
+        final String THUMBNAIL = "thumbnail";
 
         ArrayList<Book> books = new ArrayList<Book>();
         try {
@@ -80,7 +107,17 @@ public class   ApiUtil {
             for (int i = 0; i<numberOfBooks; i++) {
                 JSONObject bookJSON = arrayBooks.getJSONObject(i);
                 JSONObject volumeInfoJSON = bookJSON.getJSONObject(VOLUMEINFO);
-                int authorNum = volumeInfoJSON.getJSONArray(AUTHORS).length();
+                JSONObject imageLinksJSON = null;
+                if (volumeInfoJSON.has(IMAGELINKS)) {
+                    imageLinksJSON = volumeInfoJSON.getJSONObject(IMAGELINKS);
+                }
+                int authorNum;
+                try {
+                    authorNum = volumeInfoJSON.getJSONArray(AUTHORS).length();
+                } catch (Exception e) {
+                    authorNum = 0;
+                }
+
                 String[] authors = new String[authorNum];
                 for (int j = 0; j<authorNum; j++) {
                     authors[j] = volumeInfoJSON.getJSONArray(AUTHORS).get(j).toString();
@@ -90,9 +127,10 @@ public class   ApiUtil {
                         volumeInfoJSON.getString(TITLE),
                         (volumeInfoJSON.isNull(SUBTITLE)?"":volumeInfoJSON.getString(SUBTITLE)),
                         authors,
-                        volumeInfoJSON.getString(PUBLISHER),
-                        volumeInfoJSON.getString(PUBLISHED_DATE),
-                        volumeInfoJSON.getString(DESCRIPTION));
+                        (volumeInfoJSON.isNull(PUBLISHER)?"Unknown Publisher":volumeInfoJSON.getString(PUBLISHER)),
+                        (volumeInfoJSON.isNull(PUBLISHED_DATE)?"Unspecified Publish Date!":volumeInfoJSON.getString(PUBLISHED_DATE)),
+                        (volumeInfoJSON.isNull(DESCRIPTION)?"Description Unavailable!":volumeInfoJSON.getString(DESCRIPTION)),
+                        (imageLinksJSON==null)?"": imageLinksJSON.getString(THUMBNAIL));
                 books.add(book);
             }
         } catch (JSONException e) {
